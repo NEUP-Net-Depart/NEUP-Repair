@@ -26,7 +26,7 @@ type PagedData struct {
 	PageCount int         `json:"page_count"`
 }
 
-func ParseAuth(r *http.Request) (err error, v model.Auth) {
+func ParseAuth(r *http.Request) (v model.Auth, err error) {
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&v)
 	if err != nil {
@@ -35,7 +35,7 @@ func ParseAuth(r *http.Request) (err error, v model.Auth) {
 	return
 }
 
-func ParseOrder(r *http.Request) (err error, v model.Order) {
+func ParseOrder(r *http.Request) (v model.Order, err error) {
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&v)
 	if err != nil {

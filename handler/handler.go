@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,7 +24,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var err error
 	aor := AddOrderResponse{}
 	resp := Response{}
-	er, o := ParseOrder(r)
+	o, er := ParseOrder(r)
 	if er != nil {
 		err = errors.Wrap(er, "add order error")
 		log.Error(err)
@@ -63,7 +65,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	log.Info(r.RequestURI)
 
 	// Here we remove all the query params in origin URL
-	secretPath := config.GlobalConfig.FrontendRoot + "order.html" + "?secret=" + o.SecretID
+	secretPath := config.GlobalConfig.FrontendRoot + "#/orders/" + o.SecretID
 	log.Info(secretPath)
 	qrpath := "qr." + o.SecretID + ".png"
 	err = qrcode.WriteFile(secretPath, qrcode.Medium, 256, qrpath)
@@ -112,7 +114,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func OrdersByPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	//var blackList = map[string]bool{}
-	perpg := 6
+	perpg := 50
 	resp := Response{}
 	p := r.URL.Query().Get("page")
 	page, err := strconv.ParseInt(p, 10, strconv.IntSize)
@@ -131,7 +133,7 @@ func OrdersByPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 	tot, err := model.OrderCount(model.GlobalDB)
-	log.Infof("%+v", ol)
+	//log.Infof("%+v", ol)
 	pgcnt := tot / perpg
 	if tot%perpg != 0 {
 		pgcnt++
@@ -180,7 +182,52 @@ func OrdersSecret(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 }
 
 func Auth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	resp := Response{}
+	if r.Header.Get("AuthOK") == "true" {
+		resp.Success = true
+		resp.Msg = "您已经登录了"
+		resp.Code = http.StatusOK
+		resp.Write(w, r)
+		return
+	}
 
+	au, err := ParseAuth(r)
+	if err != nil {
+		err = errors.Wrap(err, "add order error")
+		log.Error(err)
+		resp.Success = false
+		resp.Msg = "invalid json"
+		resp.Code = http.StatusBadRequest
+		resp.Write(w, r)
+		return
+	}
+	// Encoded Password
+	enc := sha256.New()
+	enc.Write([]byte(au.Password))
+	dest := fmt.Sprintf("%x", enc.Sum(nil))
+	realpass, err := model.PasswordByName(model.GlobalDB, au.UserName)
+	if err != nil {
+		log.Error(err)
+		resp.Success = false
+		resp.Msg = "错误的用户名或者密码"
+		resp.Code = http.StatusUnauthorized
+		resp.Write(w, r)
+		return
+	}
+	token := SetAuth(au.UserName)
+	if dest == realpass {
+		resp.Success = true
+		resp.Data = token //Login Code
+		resp.Code = http.StatusOK
+		resp.Write(w, r)
+		return
+	}
+	// Not success
+	resp.Success = false
+	resp.Msg = "错误的用户名或者密码"
+	resp.Code = http.StatusUnauthorized
+	resp.Write(w, r)
+	return
 }
 
 func FinishOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

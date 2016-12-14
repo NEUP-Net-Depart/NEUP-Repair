@@ -36,6 +36,7 @@ func main() {
 	router.PUT("/api/v1/orders/:secret/rate", handler.RateOrder)
 	router.GET("/api/v1/orders/:secret/comments", handler.Comments)
 	router.GET("/api/v1/orders", handler.OrdersByPage)
+	router.POST("/api/v1/auth", handler.Auth)
 	m := negroni.New()
 	m.UseFunc(middleware.CORS)
 	m.UseFunc(middleware.CheckAuth)

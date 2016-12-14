@@ -1,0 +1,1 @@
+ALTER TABLE `orders` MODIFY COLUMN `date` VARCHAR(255)

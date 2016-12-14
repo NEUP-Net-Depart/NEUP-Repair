@@ -36,8 +36,8 @@ type OrderGuarded struct {
 }
 
 func (o *Order) Insert(db Storager) (err error) {
-	sqlStr := "INSERT INTO orders (name, stu_id, date, comment, service_type, secret_id)VALUES(?,?,?,?,?,?)"
-	_, err = db.Queryx(sqlStr, o.Name, o.StuID, o.Date, o.Comment, o.ServiceType, o.SecretID)
+	sqlStr := "INSERT INTO orders (name, stu_id, date, comment, service_type, secret_id, create_time, update_time)VALUES(?,?,?,?,?,?,?,?)"
+	_, err = db.Queryx(sqlStr, o.Name, o.StuID, o.Date, o.Comment, o.ServiceType, o.SecretID, time.Now().Local(), time.Now().Local())
 	if err != nil {
 		err = errors.Wrap(err, "insert error")
 		return
@@ -64,8 +64,8 @@ func OrderByID(db Storager, ID int) (err error) {
 }
 
 func UpdateOrderDoneFlagBySecret(db Storager, secretID string) (err error) {
-	sqlStr := "UPDATE orders SET done_flag = TRUE WHERE secret_id = ?"
-	_, err = db.Exec(sqlStr, secretID)
+	sqlStr := "UPDATE orders SET done_flag = TRUE, update_time = ? WHERE secret_id = ?"
+	_, err = db.Exec(sqlStr, time.Now().Local(), secretID)
 
 	if err != nil && err != sql.ErrNoRows {
 		err = errors.Wrap(err, "order by stu_id error")

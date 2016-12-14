@@ -13,6 +13,7 @@ const (
 
 func CheckAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	token := r.Header.Get(AuthHeader)
+	log.Infof("token = %s", token)
 	if ok := handler.Check(token); !ok {
 		log.Info("Not a authenticated user")
 		r.Header.Del("AuthOK")
