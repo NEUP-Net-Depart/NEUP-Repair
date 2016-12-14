@@ -11,8 +11,9 @@ import (
 var GlobalConfig Config
 
 type Config struct {
-	ServAddr string `toml:"serv_addr"`
-	DSN      string `toml:"dsn"`
+	ServAddr     string `toml:"serv_addr"`
+	DSN          string `toml:"dsn"`
+	FrontendRoot string `toml:"frontend_root"`
 }
 
 func init() {

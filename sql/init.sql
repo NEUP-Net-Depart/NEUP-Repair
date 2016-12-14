@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS `neup_repair`.`orders`;
-CREATE TABLE `neup_repair`.`orders` (
+DROP TABLE IF EXISTS `orders`;
+CREATE TABLE `orders` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL DEFAULT '',
     `stu_id` VARCHAR(45) NOT NULL DEFAULT '',

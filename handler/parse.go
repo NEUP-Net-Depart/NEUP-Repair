@@ -21,6 +21,20 @@ type Response struct {
 	Msg     string      `json:"msg,omitempty"`
 }
 
+type PagedData struct {
+	Data      interface{} `json:"data"`
+	PageCount int         `json:"page_count"`
+}
+
+func ParseAuth(r *http.Request) (err error, v model.Auth) {
+	dec := json.NewDecoder(r.Body)
+	err = dec.Decode(&v)
+	if err != nil {
+		err = errors.Wrap(err, "parse auth error")
+	}
+	return
+}
+
 func ParseOrder(r *http.Request) (err error, v model.Order) {
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&v)

@@ -38,6 +38,8 @@ func main() {
 	router.GET("/api/v1/orders", handler.OrdersByPage)
 	m := negroni.New()
 	m.UseFunc(middleware.CORS)
+	m.UseFunc(middleware.CheckAuth)
+	m.UseFunc(middleware.Logger)
 	m.UseHandler(router)
 
 	log.Fatal(http.ListenAndServe(config.GlobalConfig.ServAddr, m))

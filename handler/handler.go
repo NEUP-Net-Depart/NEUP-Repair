@@ -3,9 +3,11 @@ package handler
 import (
 	"net/http"
 	"os"
+	"strconv"
 
 	"encoding/base64"
 
+	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/config"
 	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/model"
 	log "github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
@@ -56,7 +58,12 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	// Generate QR Code
-	secretPath := r.Header.Get("Origin") + "/order.html" + "?secret=" + o.SecretID
+	log.Info(r.Header)
+	log.Info(r.URL)
+	log.Info(r.RequestURI)
+
+	// Here we remove all the query params in origin URL
+	secretPath := config.GlobalConfig.FrontendRoot + "order.html" + "?secret=" + o.SecretID
 	log.Info(secretPath)
 	qrpath := "qr." + o.SecretID + ".png"
 	err = qrcode.WriteFile(secretPath, qrcode.Medium, 256, qrpath)
@@ -71,6 +78,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		err = errors.Wrap(err, "add order error")
 		log.Error(err)
 		resp.WriteError(w)
+		return
 	}
 	defer f.Close()
 	err = os.Remove(qrpath)
@@ -83,6 +91,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		err = errors.Wrap(err, "add order error: cannot get file szie")
 		log.Error(err)
 		resp.WriteError(w)
+		return
 	}
 	encbuf := make([]byte, info.Size())
 	f.Read(encbuf)
@@ -91,6 +100,7 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		err = errors.Wrap(err, "add order error: base64 encode error")
 		log.Error(err)
 		resp.WriteError(w)
+		return
 	}
 	resp.Success = true
 	aor.QRcode = encstr
@@ -101,13 +111,51 @@ func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func OrdersByPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
+	//var blackList = map[string]bool{}
+	perpg := 6
+	resp := Response{}
+	p := r.URL.Query().Get("page")
+	page, err := strconv.ParseInt(p, 10, strconv.IntSize)
+	var ol interface{}
+	if r.Header.Get("AuthOK") == "true" {
+		ol, err = model.OrderPager(model.GlobalDB, int(page), perpg)
+	} else {
+		ol, err = model.OrderGuardedPager(model.GlobalDB, int(page), perpg)
+	}
+	if err != nil {
+		err = errors.Wrap(err, "get orders by page error")
+		log.Error(err)
+		resp.Success = false
+		resp.Msg = "服务器错误"
+		resp.Write(w, r)
+		return
+	}
+	tot, err := model.OrderCount(model.GlobalDB)
+	log.Infof("%+v", ol)
+	pgcnt := tot / perpg
+	if tot%perpg != 0 {
+		pgcnt++
+	}
+	resp.Success = true
+	resp.Data = struct {
+		Data      interface{} `json:"data"`
+		PageCount int         `json:"page_count"`
+		ItemCount int         `json:"item_count"`
+		PageOn    int64       `json:"page_on"`
+	}{
+		Data:      ol,
+		PageCount: pgcnt,
+		ItemCount: tot,
+		PageOn:    page,
+	}
+	resp.Write(w, r)
+	return
 }
 
 func OrdersSecret(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	resp := Response{}
 	secretID := ps.ByName("secret")
-	o, err := model.OrderBySecret(model.GlobalDB.Unsafe(), secretID)
+	o, err := model.OrderBySecret(model.GlobalDB, secretID)
 	if err != nil {
 		err = errors.Wrap(err, "get order by secret error")
 		log.Error(err)
@@ -138,13 +186,21 @@ func Auth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func FinishOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	resp := Response{}
 	secretID := ps.ByName("secret")
-	err := model.UpdateOrderDoneFlagBySecret(model.GlobalDB.Unsafe(), secretID)
-	if err != nil {
-		err = errors.Wrap(err, "get order by secret error")
-		log.Error(err)
+	if r.Header.Get("AuthOK") == "true" {
+		err := model.UpdateOrderDoneFlagBySecret(model.GlobalDB.Unsafe(), secretID)
+		if err != nil {
+			err = errors.Wrap(err, "get order by secret error")
+			log.Error(err)
+			resp.Success = false
+			resp.Msg = "更新order状态失败 请检查你的secretID是否正确,如有疑问请联系管理员"
+			resp.Code = http.StatusInternalServerError
+			resp.Write(w, r)
+			return
+		}
+	} else {
 		resp.Success = false
-		resp.Msg = "更新order状态失败 请检查你的secretID是否正确,如有疑问请联系管理员"
-		resp.Code = 500
+		resp.Msg = "没有权限进行此操作"
+		resp.Code = http.StatusUnauthorized
 		resp.Write(w, r)
 		return
 	}
