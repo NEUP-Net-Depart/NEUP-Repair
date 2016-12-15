@@ -18,7 +18,47 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+var GlobalAnnounce string
+
+func init() {
+	GlobalAnnounce = "硬件维修工作正常进行~ 欢迎大家报名"
+}
+
 // So small, no need middleware just now
+
+func Announce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	resp := Response{}
+	resp.Code = http.StatusOK
+	resp.Success = true
+	resp.Data = GlobalAnnounce
+	resp.Write(w, r)
+	return
+}
+
+func SetAnnounce(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	resp := Response{}
+	if r.Header.Get("AuthOK") != "true" {
+		resp.Code = http.StatusUnauthorized
+		resp.Success = false
+		resp.Msg = "没有权限对公告进行修改哦"
+		resp.Write(w, r)
+		return
+	}
+	an, er := ParseString(r)
+	if er != nil {
+		err := errors.Wrap(er, "update announce error")
+		log.Error(err)
+		resp.Success = false
+		resp.Msg = "invalid json"
+		resp.Write(w, r)
+		return
+	}
+	GlobalAnnounce = an.Announce
+	resp.Success = true
+	resp.Code = http.StatusOK
+	resp.Write(w, r)
+	return
+}
 
 func AddOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var err error

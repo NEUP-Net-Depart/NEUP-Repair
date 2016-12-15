@@ -13,6 +13,8 @@ type Order struct {
 	Name        string `json:"name" db:"name,omitempty"`
 	StuID       string `json:"stu_id" db:"stu_id,omitempty"`
 	Date        string `json:"date,omitempty" db:"date,omitempty"`
+	Area        string `json:"area" db:"area"`
+	Contact     string `json:"contact" db:"contact"`
 	Comment     string `json:"comment" db:"comment"`
 	ServiceType string `json:"service_type" db:"service_type"`
 	// Below are info to modify after order created
@@ -27,6 +29,7 @@ type Order struct {
 type OrderGuarded struct {
 	ID          int64  `json:"id,omitempty" db:"id,omitempty"`
 	Name        string `json:"name" db:"name,omitempty"`
+	Area        string `json:"area" db:"area"`
 	Date        string `json:"date,omitempty" db:"date,omitempty"`
 	ServiceType string `json:"service_type" db:"service_type"`
 	// Below are info to modify after order created
@@ -36,8 +39,8 @@ type OrderGuarded struct {
 }
 
 func (o *Order) Insert(db Storager) (err error) {
-	sqlStr := "INSERT INTO orders (name, stu_id, date, comment, service_type, secret_id, create_time, update_time)VALUES(?,?,?,?,?,?,?,?)"
-	_, err = db.Queryx(sqlStr, o.Name, o.StuID, o.Date, o.Comment, o.ServiceType, o.SecretID, time.Now().Local(), time.Now().Local())
+	sqlStr := "INSERT INTO orders (name, stu_id, date, comment, service_type, secret_id, create_time, update_time, area, contact)VALUES(?,?,?,?,?,?,?,?,?,?)"
+	_, err = db.Queryx(sqlStr, o.Name, o.StuID, o.Date, o.Comment, o.ServiceType, o.SecretID, time.Now().Local(), time.Now().Local(), o.Area, o.Contact)
 	if err != nil {
 		err = errors.Wrap(err, "insert error")
 		return

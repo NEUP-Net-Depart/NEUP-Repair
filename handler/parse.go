@@ -14,6 +14,10 @@ type AddOrderResponse struct {
 	QRcode   string `json:"qrcode"`
 }
 
+type Annoucment struct {
+	Announce string `json:"announce"`
+}
+
 type Response struct {
 	Success bool        `json:"success"`
 	Code    int         `json:"code"`
@@ -29,6 +33,15 @@ type PagedData struct {
 func ParseAuth(r *http.Request) (v model.Auth, err error) {
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&v)
+	if err != nil {
+		err = errors.Wrap(err, "parse auth error")
+	}
+	return
+}
+
+func ParseString(r *http.Request) (an Annoucment, err error) {
+	dec := json.NewDecoder(r.Body)
+	err = dec.Decode(&an)
 	if err != nil {
 		err = errors.Wrap(err, "parse auth error")
 	}
