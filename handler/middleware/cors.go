@@ -3,8 +3,6 @@ package middleware
 import "net/http"
 
 func CORS(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	host := r.Header.Get("Origin")
-	w.Header().Add("Access-Control-Allow-Origin", host)
 	w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT")
 	w.Header().Add("Access-Control-Max-Age", "3600")
 	w.Header().Add("Access-Control-Allow-Credentials", "true")

@@ -9,8 +9,8 @@ import (
 
 	"encoding/base64"
 
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/config"
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/model"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/config"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/model"
 	log "github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"

@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/handler"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/handler"
 	log "github.com/Sirupsen/logrus"
 )
 

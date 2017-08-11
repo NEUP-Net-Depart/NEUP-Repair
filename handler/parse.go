@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/model"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/model"
 	log "github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )

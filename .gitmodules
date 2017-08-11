@@ -1,0 +1,3 @@
+[submodule "resources/NEUP-Repair-frontend"]
+	path = resources/NEUP-Repair-frontend
+	url = https://github.com/NEUP-Net-Depart/NEUP-Repair-frontend.git

@@ -3,11 +3,11 @@ package main
 import (
 	"net/http"
 
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/handler/middleware"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/handler/middleware"
 
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/config"
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/handler"
-	"github.com/NEUP-Net-Depart/NEUP-Repair-backend/model"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/config"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/handler"
+	"github.com/NEUP-Net-Depart/NEUP-Repair/model"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -40,6 +40,7 @@ func main() {
 	router.GET("/api/v1/announce", handler.Announce)
 	router.PUT("/api/v1/announce", handler.SetAnnounce)
 	m := negroni.New()
+	m.Use(negroni.NewStatic(http.Dir("resources/NEUP-Repair-frontend/app")))
 	m.UseFunc(middleware.CORS)
 	m.UseFunc(middleware.CheckAuth)
 	m.UseFunc(middleware.Logger)
