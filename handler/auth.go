@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	uuid "github.com/satori/go.uuid"
+	"sync"
 )
 
 type TokenInfo struct {
@@ -13,12 +14,15 @@ type TokenInfo struct {
 }
 
 var AuthTokenList map[string]TokenInfo
+var mu sync.Mutex
 
 func init() {
 	AuthTokenList = make(map[string]TokenInfo)
 }
 
 func Check(token string) (ok bool) {
+	mu.Lock()
+	defer mu.Unlock()
 	log.Infof("%+v", AuthTokenList)
 	tok, ok := AuthTokenList[token]
 	if !ok {
@@ -40,6 +44,8 @@ func SetAuth(user string) (token string) {
 		user:     user,
 		expireAt: time.Now().Add(time.Hour * 24),
 	}
+	mu.Lock()
 	AuthTokenList[token] = tinfo
+	mu.Unlock()
 	return
 }
